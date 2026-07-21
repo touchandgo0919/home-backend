@@ -1,0 +1,18 @@
+{
+  "name": "home-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create homepage",
+    "db:migrate:local": "wrangler d1 migrations apply homepage --local",
+    "db:migrate:remote": "wrangler d1 migrations apply homepage --remote",
+    "cf:setup": "node scripts/setup-cloudflare.mjs",
+    "seed:generate": "node scripts/generate-seed.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.24.3"
+  }
+}
