@@ -56,11 +56,15 @@ CREATE INDEX idx_tenants_sort ON tenants(sort_order, id);
 CREATE INDEX idx_tenants_slug ON tenants(slug);
 CREATE INDEX idx_tenant_tokens_tenant ON tenant_tokens(tenant_id, id);
 CREATE INDEX idx_tenant_tokens_token ON tenant_tokens(token);
+CREATE INDEX idx_tenant_tokens_token_tenant ON tenant_tokens(token, tenant_id);
 CREATE INDEX idx_categories_sort ON categories(sort_order, id);
 CREATE INDEX idx_categories_tenant_sort ON categories(tenant_id, sort_order, id);
+CREATE INDEX idx_categories_tenant_id ON categories(tenant_id, id);
 CREATE INDEX idx_bookmarks_category_sort ON bookmarks(category_id, sort_order, id);
 CREATE INDEX idx_bookmarks_tenant_sort ON bookmarks(tenant_id, sort_order, id);
 CREATE INDEX idx_bookmarks_tenant_category_sort ON bookmarks(tenant_id, category_id, sort_order, id);
+CREATE INDEX idx_bookmarks_tenant_id ON bookmarks(tenant_id, id);
+CREATE INDEX idx_bookmarks_category_tenant ON bookmarks(category_id, tenant_id);
 
 INSERT INTO tenants (slug, name, admin_token, sort_order)
 VALUES ('zhaotao', 'zhaotao', '76228f6039d240938f550232266157e066a778401c04479cabfa69289b92f5b4', 0);
