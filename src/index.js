@@ -287,7 +287,20 @@ async function getNav(db, slug) {
 
 async function listTenants(db) {
   const { results } = await db
-    .prepare("SELECT id, slug, name, admin_token, sort_order, created_at, updated_at FROM tenants ORDER BY sort_order, id")
+    .prepare(
+      `SELECT tenants.id, tenants.slug, tenants.name, tenants.admin_token, tenants.sort_order,
+              tenants.created_at, tenants.updated_at,
+              COALESCE(
+                (SELECT role FROM tenant_tokens
+                 WHERE tenant_tokens.tenant_id = tenants.id
+                   AND tenant_tokens.token = tenants.admin_token
+                 ORDER BY tenant_tokens.id
+                 LIMIT 1),
+                'admin'
+              ) AS token_role
+       FROM tenants
+       ORDER BY tenants.sort_order, tenants.id`
+    )
     .all();
   return results;
 }
