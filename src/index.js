@@ -327,20 +327,35 @@ async function updateTenant(db, id, body) {
   const name = requireText(body.name || body.slug, "name");
   const adminToken = String(body.admin_token || body.adminToken || "").trim();
   const tokenRole = requireRole(body.token_role || body.tokenRole || body.role);
+  const existing = await db.prepare("SELECT admin_token FROM tenants WHERE id = ?").bind(id).first();
+  if (!existing) {
+    throw Object.assign(new Error("Tenant not found."), { status: 404 });
+  }
+  const assignedToken = adminToken || existing.admin_token;
 
   if (adminToken) {
     await db
       .prepare("UPDATE tenants SET slug = ?, name = ?, admin_token = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
       .bind(slug, name, adminToken, id)
       .run();
-    await db
-      .prepare("INSERT OR IGNORE INTO tenant_tokens (tenant_id, name, token, role) VALUES (?, ?, ?, ?)")
-      .bind(id, `${name} ${tokenRole === "admin" ? "管理员" : "编辑者"}`, adminToken, tokenRole)
-      .run();
   } else {
     await db
       .prepare("UPDATE tenants SET slug = ?, name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
       .bind(slug, name, id)
+      .run();
+  }
+
+  // 编辑角色时通常不会重新填写 token；因此需要更新该租户当前令牌的角色，
+  // 而不是用 INSERT OR IGNORE 静默跳过已有令牌。
+  const tokenName = `${name} ${tokenRole === "admin" ? "管理员" : "编辑者"}`;
+  const tokenUpdate = await db
+    .prepare("UPDATE tenant_tokens SET name = ?, role = ?, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND token = ?")
+    .bind(tokenName, tokenRole, id, assignedToken)
+    .run();
+  if (!tokenUpdate.meta.changes) {
+    await db
+      .prepare("INSERT INTO tenant_tokens (tenant_id, name, token, role) VALUES (?, ?, ?, ?)")
+      .bind(id, tokenName, assignedToken, tokenRole)
       .run();
   }
 
