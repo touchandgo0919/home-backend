@@ -16,6 +16,10 @@ VALUES ('zhaotao', 'zhaotao', '76228f6039d240938f550232266157e066a778401c04479ca
 
 DROP INDEX IF EXISTS idx_categories_sort;
 
+-- D1 runs migrations in a transaction, where PRAGMA foreign_keys = OFF may not
+-- disable cascades. Preserve bookmarks before replacing their parent table.
+CREATE TABLE bookmarks_backup AS SELECT * FROM bookmarks;
+
 CREATE TABLE categories_new (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -40,6 +44,10 @@ FROM categories;
 
 DROP TABLE categories;
 ALTER TABLE categories_new RENAME TO categories;
+
+INSERT OR IGNORE INTO bookmarks (id, category_id, title, url, sort_order, created_at, updated_at)
+SELECT id, category_id, title, url, sort_order, created_at, updated_at FROM bookmarks_backup;
+DROP TABLE bookmarks_backup;
 
 CREATE INDEX IF NOT EXISTS idx_tenants_sort ON tenants(sort_order, id);
 CREATE INDEX IF NOT EXISTS idx_tenants_slug ON tenants(slug);

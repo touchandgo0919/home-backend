@@ -1,6 +1,6 @@
 const DEFAULT_TENANT = "zhaotao";
 const COOKIE_NAME = "nav_token";
-const COOKIE_MAX_AGE = 99 * 365 * 24 * 60 * 60;
+const AUTH_LIFETIME_YEARS = 99;
 
 const corsHeaders = (request, env) => {
   const origin = request.headers.get("origin") || "";
@@ -136,8 +136,11 @@ const bearerToken = (request) => (request.headers.get("authorization") || "").re
 const authToken = (request) => bearerToken(request) || parseCookies(request)[COOKIE_NAME] || "";
 
 const authCookie = (token) => {
-  const expires = new Date(Date.now() + COOKIE_MAX_AGE * 1000).toUTCString();
-  return `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; Expires=${expires}; HttpOnly; SameSite=Lax`;
+  const now = new Date();
+  const expires = new Date(now);
+  expires.setFullYear(expires.getFullYear() + AUTH_LIFETIME_YEARS);
+  const maxAge = Math.floor((expires.getTime() - now.getTime()) / 1000);
+  return `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; Max-Age=${maxAge}; Expires=${expires.toUTCString()}; HttpOnly; SameSite=Lax`;
 };
 
 const clearAuthCookie = () => `${COOKIE_NAME}=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`;
@@ -236,21 +239,19 @@ function requireTenantAdmin(actor) {
 }
 
 async function getNavForTenant(db, tenant) {
-  const { results: categories } = await db
-    .prepare(
-      "SELECT id, name AS category, icon, sort_order FROM categories WHERE tenant_id = ? ORDER BY sort_order, id"
-    )
-    .bind(tenant.id)
-    .all();
-  const { results: bookmarks } = await db
-    .prepare(
+  const [{ results: categories }, { results: bookmarks }] = await Promise.all([
+    db.prepare("SELECT id, name AS category, icon, sort_order FROM categories WHERE tenant_id = ? ORDER BY sort_order, id")
+      .bind(tenant.id)
+      .all(),
+    db.prepare(
       `SELECT id, tenant_id, category_id, title, url, icon_url, sort_order
        FROM bookmarks
        WHERE tenant_id = ?
        ORDER BY category_id, sort_order, id`
     )
-    .bind(tenant.id)
-    .all();
+      .bind(tenant.id)
+      .all(),
+  ]);
 
   const bookmarksByCategory = new Map();
   for (const bookmark of bookmarks) {

@@ -1,17 +1,8 @@
 import fs from "node:fs";
 
-const html = fs.readFileSync("index.html", "utf8");
-const match = html.match(/const fallbackSiteData = ([\s\S]*?);\n\n    const icons =/);
+const siteData = JSON.parse(fs.readFileSync(new URL("../data/seed.json", import.meta.url), "utf8"));
 
-if (!match) {
-  throw new Error("Unable to find siteData in index.html");
-}
-
-const siteData = Function(`return ${match[1]}`)();
-
-fs.mkdirSync("data", { recursive: true });
 fs.mkdirSync("migrations", { recursive: true });
-fs.writeFileSync("data/seed.json", `${JSON.stringify(siteData, null, 2)}\n`);
 
 const quote = (value) => String(value).replaceAll("'", "''");
 
@@ -107,6 +98,7 @@ CREATE TABLE bookmarks (
   category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   url TEXT NOT NULL,
+  icon_url TEXT,
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -116,11 +108,15 @@ CREATE INDEX idx_tenants_sort ON tenants(sort_order, id);
 CREATE INDEX idx_tenants_slug ON tenants(slug);
 CREATE INDEX idx_tenant_tokens_tenant ON tenant_tokens(tenant_id, id);
 CREATE INDEX idx_tenant_tokens_token ON tenant_tokens(token);
+CREATE INDEX idx_tenant_tokens_token_tenant ON tenant_tokens(token, tenant_id);
 CREATE INDEX idx_categories_sort ON categories(sort_order, id);
 CREATE INDEX idx_categories_tenant_sort ON categories(tenant_id, sort_order, id);
+CREATE INDEX idx_categories_tenant_id ON categories(tenant_id, id);
 CREATE INDEX idx_bookmarks_category_sort ON bookmarks(category_id, sort_order, id);
 CREATE INDEX idx_bookmarks_tenant_sort ON bookmarks(tenant_id, sort_order, id);
 CREATE INDEX idx_bookmarks_tenant_category_sort ON bookmarks(tenant_id, category_id, sort_order, id);
+CREATE INDEX idx_bookmarks_tenant_id ON bookmarks(tenant_id, id);
+CREATE INDEX idx_bookmarks_category_tenant ON bookmarks(category_id, tenant_id);
 
 INSERT INTO tenants (slug, name, admin_token, sort_order)
 VALUES ('${quote(defaultTenant.slug)}', '${quote(defaultTenant.name)}', '${quote(defaultTenant.adminToken)}', 0);
@@ -145,5 +141,5 @@ siteData.forEach((group, groupIndex) => {
   rebuildSql += "\n";
 });
 
-fs.writeFileSync("migrations/rebuild_database.sql", rebuildSql);
+fs.writeFileSync("scripts/rebuild_database.sql", `${rebuildSql.trimEnd()}\n`);
 console.log(`Generated ${siteData.length} categories and ${siteData.reduce((sum, item) => sum + item.links.length, 0)} bookmarks.`);

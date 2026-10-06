@@ -1,0 +1,450 @@
+[
+  {
+    "category": "工作",
+    "icon": "briefcase",
+    "links": [
+      {
+        "title": "x",
+        "url": "https://twitter.com/?lang=zh"
+      },
+      {
+        "title": "chatgpt",
+        "url": "https://chatgpt.com/"
+      },
+      {
+        "title": "deepseek",
+        "url": "https://www.deepseek.com/"
+      },
+      {
+        "title": "grok",
+        "url": "https://grok.com/"
+      },
+      {
+        "title": "volcengine",
+        "url": "https://ai.volcengine.com/"
+      },
+      {
+        "title": "jianying",
+        "url": "https://jimeng.jianying.com/"
+      },
+      {
+        "title": "aliyun",
+        "url": "http://www.aliyun.com/"
+      },
+      {
+        "title": "github",
+        "url": "https://github.com/"
+      },
+      {
+        "title": "gitee",
+        "url": "https://gitee.com/"
+      },
+      {
+        "title": "flova.ai",
+        "url": "https://www.flova.ai/"
+      },
+      {
+        "title": "obsidian.md",
+        "url": "https://obsidian.md/"
+      },
+      {
+        "title": "kiro.dev",
+        "url": "https://kiro.dev"
+      },
+      {
+        "title": "youtube",
+        "url": "https://www.youtube.com/"
+      },
+      {
+        "title": "weixin.qq",
+        "url": "https://mp.weixin.qq.com/"
+      },
+      {
+        "title": "dify.ai",
+        "url": "https://dify.ai/"
+      },
+      {
+        "title": "aws.amazon",
+        "url": "https://aws.amazon.com/cn/"
+      },
+      {
+        "title": "worldrouter.ai",
+        "url": "https://www.worldrouter.ai/"
+      },
+      {
+        "title": "feishu.cn",
+        "url": "https://open.feishu.cn/?lang=zh-CN"
+      },
+      {
+        "title": "ipaddress.my",
+        "url": "https://ipaddress.my/"
+      },
+      {
+        "title": "ip.skk",
+        "url": "https://ip.skk.moe/"
+      }
+    ]
+  },
+  {
+    "category": "学习",
+    "icon": "book",
+    "links": [
+      {
+        "title": "52pojie",
+        "url": "https://www.52pojie.cn/portal.php"
+      },
+      {
+        "title": "考神资源网",
+        "url": "https://www.nishioka.com.cn/"
+      },
+      {
+        "title": "scratchor",
+        "url": "https://tiku.scratchor.com/"
+      },
+      {
+        "title": "appstorrent.ru",
+        "url": "https://appstorrent.ru/"
+      },
+      {
+        "title": "macwk.cn",
+        "url": "https://macwk.cn/"
+      },
+      {
+        "title": "cnblogs",
+        "url": "http://www.cnblogs.com/"
+      },
+      {
+        "title": "csdn.net",
+        "url": "https://www.csdn.net/"
+      },
+      {
+        "title": "51cto",
+        "url": "http://edu.51cto.com/"
+      },
+      {
+        "title": "msdn.cn",
+        "url": "https://next.itellyou.cn/Original/"
+      },
+      {
+        "title": "yage.ai",
+        "url": "https://yage.ai/share/"
+      }
+    ]
+  },
+  {
+    "category": "购物",
+    "icon": "cart",
+    "links": [
+      {
+        "title": "5sim.net",
+        "url": "https://5sim.net/zh"
+      },
+      {
+        "title": "smspool.net",
+        "url": "https://www.smspool.net/"
+      },
+      {
+        "title": "shadowsocks.nz",
+        "url": "https://portal.shadowsocks.nz/"
+      },
+      {
+        "title": "pockyt.io",
+        "url": "https://shop.pockyt.io/pc/home"
+      },
+      {
+        "title": "binance",
+        "url": "https://www.binance.com/zh-CN"
+      },
+      {
+        "title": "jd",
+        "url": "http://www.jd.com/"
+      },
+      {
+        "title": "apple.cn",
+        "url": "http://www.apple.com.cn/"
+      },
+      {
+        "title": "taobao",
+        "url": "http://www.taobao.com/"
+      },
+      {
+        "title": "tmall",
+        "url": "http://www.tmall.com/"
+      },
+      {
+        "title": "ctrip",
+        "url": "https://www.ctrip.com/"
+      },
+      {
+        "title": "12306.cn",
+        "url": "https://www.12306.cn/index/"
+      },
+      {
+        "title": "paypal",
+        "url": "http://www.paypal.com/"
+      },
+      {
+        "title": "ikea.cn",
+        "url": "https://www.ikea.cn/cn/zh/"
+      },
+      {
+        "title": "chiphell",
+        "url": "http://www.chiphell.com/"
+      },
+      {
+        "title": "qq-ex",
+        "url": "http://www.qq-ex.com/"
+      },
+      {
+        "title": "amazon",
+        "url": "https://www.amazon.com/"
+      }
+    ]
+  },
+  {
+    "category": "娱乐",
+    "icon": "smile",
+    "links": [
+      {
+        "title": "bilibili",
+        "url": "https://www.bilibili.com/"
+      },
+      {
+        "title": "douyin",
+        "url": "https://www.douyin.com/"
+      },
+      {
+        "title": "weibo",
+        "url": "http://weibo.com/"
+      },
+      {
+        "title": "nga.cn",
+        "url": "https://bbs.nga.cn/"
+      },
+      {
+        "title": "qzone",
+        "url": "https://qzone.qq.com/"
+      },
+      {
+        "title": "windy",
+        "url": "https://www.windy.com/"
+      },
+      {
+        "title": "maprunner.info",
+        "url": "https://www.maprunner.info/"
+      },
+      {
+        "title": "flightsim.to",
+        "url": "https://flightsim.to/"
+      },
+      {
+        "title": "simbrief",
+        "url": "https://www.simbrief.com/home/"
+      },
+      {
+        "title": "navigraph",
+        "url": "https://navigraph.com/"
+      },
+      {
+        "title": "simmarket",
+        "url": "https://secure.simmarket.com/default-zh.html"
+      },
+      {
+        "title": "fsprojects.eu",
+        "url": "https://www.fsprojects.eu/"
+      },
+      {
+        "title": "wingflexsim",
+        "url": "https://wingflexsim.com/"
+      },
+      {
+        "title": "cat3design",
+        "url": "https://cat3design.com/"
+      },
+      {
+        "title": "throttletek",
+        "url": "https://throttletek.com/"
+      },
+      {
+        "title": "minicockpit",
+        "url": "https://www.minicockpit.com/"
+      },
+      {
+        "title": "fenixsim",
+        "url": "https://fenixsim.com/"
+      },
+      {
+        "title": "vatsim.net",
+        "url": "https://my.vatsim.net/home"
+      },
+      {
+        "title": "adsbexchange",
+        "url": "https://globe.adsbexchange.com/"
+      },
+      {
+        "title": "flightradar24",
+        "url": "https://www.flightradar24.com/"
+      },
+      {
+        "title": "fsdreamteam",
+        "url": "http://www.fsdreamteam.com/"
+      },
+      {
+        "title": "rexsimulations",
+        "url": "https://www.rexsimulations.com"
+      },
+      {
+        "title": "inibuilds",
+        "url": "https://store.inibuilds.com/"
+      },
+      {
+        "title": "quickmadesim",
+        "url": "https://www.quickmadesim.com/"
+      },
+      {
+        "title": "justflight",
+        "url": "https://www.justflight.com/"
+      },
+      {
+        "title": "x-plane",
+        "url": "https://forums.x-plane.org/"
+      },
+      {
+        "title": "msfs.forums",
+        "url": "https://forums.flightsimulator.com/"
+      },
+      {
+        "title": "jetphotos",
+        "url": "https://www.jetphotos.com/"
+      },
+      {
+        "title": "airliners.net",
+        "url": "http://www.airliners.net/"
+      },
+      {
+        "title": "sinofsx",
+        "url": "http://bbs.sinofsx.com/index.php"
+      },
+      {
+        "title": "twitch.tv",
+        "url": "https://www.twitch.tv/directory/category/world-of-warcraft"
+      },
+      {
+        "title": "wago.io",
+        "url": "https://wago.io/"
+      },
+      {
+        "title": "wowhead",
+        "url": "https://www.wowhead.com/wow/retail"
+      },
+      {
+        "title": "raider.io",
+        "url": "https://raider.io/cn/"
+      },
+      {
+        "title": "steampowered",
+        "url": "http://store.steampowered.com"
+      },
+      {
+        "title": "g-portal",
+        "url": "https://www.g-portal.com/"
+      },
+      {
+        "title": "playstation",
+        "url": "https://asia.playstation.com/cht-hk/psn/playstation-plus/"
+      },
+      {
+        "title": "worldoftrucks",
+        "url": "https://www.worldoftrucks.com/en/"
+      },
+      {
+        "title": "prismray.io",
+        "url": "https://prismray.io/zh-CN"
+      },
+      {
+        "title": "rainymood",
+        "url": "http://rainymood.com/"
+      }
+    ]
+  },
+  {
+    "category": "理财",
+    "icon": "money",
+    "links": [
+      {
+        "title": "北京摇号",
+        "url": "https://xkczb.jtw.beijing.gov.cn/"
+      },
+      {
+        "title": "北京公积金",
+        "url": "https://gjj.beijing.gov.cn/"
+      },
+      {
+        "title": "工商银行",
+        "url": "http://www.icbc.com.cn/"
+      },
+      {
+        "title": "中国建设银行",
+        "url": "http://www.ccb.com/"
+      },
+      {
+        "title": "建行信用卡",
+        "url": "http://creditcard.ccb.com/"
+      },
+      {
+        "title": "交通银行",
+        "url": "http://www.95559.com.cn/"
+      },
+      {
+        "title": "交通银行信用卡中心",
+        "url": "http://creditcard.bankcomm.com/"
+      }
+    ]
+  },
+  {
+    "category": "路由",
+    "icon": "router",
+    "links": [
+      {
+        "title": "ifdian.net",
+        "url": "https://ifdian.net/"
+      },
+      {
+        "title": "koolcenter",
+        "url": "https://www.koolcenter.com/"
+      },
+      {
+        "title": "speedtest.net",
+        "url": "http://www.speedtest.net/"
+      },
+      {
+        "title": "RT-AX89X",
+        "url": "https://touchandgo0919.ddnsto.com/Main_Login.asp"
+      },
+      {
+        "title": "R8000",
+        "url": "https://vinsanity0919.ddnsto.com/Main_Login.asp"
+      },
+      {
+        "title": "R7000",
+        "url": "https://zhaotao0919.ddnsto.com/Main_Login.asp"
+      },
+      {
+        "title": "RT-AX86U",
+        "url": "https://xingyue0930.ddnsto.com/Main_Login.asp"
+      },
+      {
+        "title": "公司路由",
+        "url": "https://beagle0919.ddnsto.com/Main_Login.asp"
+      },
+      {
+        "title": "内网路由",
+        "url": "http://192.168.2.1/"
+      },
+      {
+        "title": "北京宽带网",
+        "url": "http://www.bbn.com.cn/"
+      }
+    ]
+  }
+]
