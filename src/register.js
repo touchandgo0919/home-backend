@@ -32,8 +32,8 @@ export async function register(request, env, db) {
         .bind(slug, name, token, Date.now()),
       db.prepare("INSERT INTO tenant_tokens (tenant_id, name, token, role) SELECT id, ?, ?, 'editor' FROM tenants WHERE slug = ? ON CONFLICT(token) DO NOTHING")
         .bind(`${name} 个人令牌`, token, slug),
-      db.prepare("INSERT INTO categories (tenant_id, name, icon, sort_order) SELECT id, '我的收藏', 'book', 0 FROM tenants WHERE slug = ? ON CONFLICT(tenant_id, name) DO NOTHING")
-        .bind(slug),
+      db.prepare("INSERT INTO categories (tenant_id, name, icon, sort_order) SELECT id, ?, 'book', 0 FROM tenants WHERE slug = ? ON CONFLICT(tenant_id, name) DO NOTHING")
+        .bind(body.language === "en" ? "My bookmarks" : "我的收藏", slug),
     ]);
     tenant = await db.prepare("SELECT id, slug, name FROM tenants WHERE slug = ?").bind(slug).first();
   }

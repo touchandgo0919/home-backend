@@ -1,3 +1,5 @@
+import { backupRoutes, scheduledBackup } from "./backups.js";
+import { library } from "./library.js";
 import { register } from "./register.js";
 
 const DEFAULT_TENANT = "zhaotao";
@@ -243,13 +245,14 @@ function requirePlatformAdmin(actor) {
 
 async function getNavForTenant(db, tenant) {
   const [{ results: categories }, { results: bookmarks }] = await Promise.all([
-    db.prepare("SELECT id, name AS category, icon, sort_order FROM categories WHERE tenant_id = ? ORDER BY sort_order, id")
+    db.prepare("SELECT id, name AS category, icon, sort_order FROM categories WHERE tenant_id = ? AND deleted_at IS NULL ORDER BY sort_order, id")
       .bind(tenant.id)
       .all(),
     db.prepare(
       `SELECT id, tenant_id, category_id, title, url, icon_url, sort_order
        FROM bookmarks
-       WHERE tenant_id = ?
+       WHERE tenant_id = ? AND deleted_at IS NULL
+       AND category_id IN (SELECT id FROM categories WHERE deleted_at IS NULL)
        ORDER BY category_id, sort_order, id`
     )
       .bind(tenant.id)
@@ -412,7 +415,7 @@ async function createBookmark(db, tenantId, body) {
   const url = requireUrl(body.url);
   const iconUrl = faviconUrlForBookmark(url);
   const category = await db
-    .prepare("SELECT id FROM categories WHERE id = ? AND tenant_id = ?")
+    .prepare("SELECT id FROM categories WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL")
     .bind(categoryId, tenantId)
     .first();
   if (!category) {
@@ -433,7 +436,7 @@ async function updateBookmark(db, tenantId, id, body) {
   const url = requireUrl(body.url);
   const iconUrl = faviconUrlForBookmark(url);
   const category = await db
-    .prepare("SELECT id FROM categories WHERE id = ? AND tenant_id = ?")
+    .prepare("SELECT id FROM categories WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL")
     .bind(categoryId, tenantId)
     .first();
   if (!category) {
@@ -444,7 +447,7 @@ async function updateBookmark(db, tenantId, id, body) {
     .prepare(
       `UPDATE bookmarks
        SET tenant_id = ?, category_id = ?, title = ?, url = ?, icon_url = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ? AND tenant_id = ?`
+       WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL`
     )
     .bind(tenantId, categoryId, title, url, iconUrl, id, tenantId)
     .run();
@@ -458,7 +461,7 @@ async function reorder(db, tenantId, table, ids, categoryId) {
 
   if (table === "bookmarks") {
     const category = await db
-      .prepare("SELECT id FROM categories WHERE id = ? AND tenant_id = ?")
+      .prepare("SELECT id FROM categories WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL")
       .bind(categoryId, tenantId)
       .first();
     if (!category) {
@@ -472,7 +475,7 @@ async function reorder(db, tenantId, table, ids, categoryId) {
         .prepare(
           `UPDATE bookmarks
            SET sort_order = ?, tenant_id = ?, category_id = ?, updated_at = CURRENT_TIMESTAMP
-           WHERE id = ? AND tenant_id = ?`
+           WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL`
         )
         .bind(index, tenantId, categoryId, Number(id), tenantId);
     }
@@ -545,6 +548,10 @@ export async function onRequest(context) {
 
     const actor = await requireActor(request, env, db);
     const tenantId = actor.tenant.id;
+    const backup = await backupRoutes(request, env, actor, path);
+    if (backup) return json(backup.body, backup.status);
+    const enhanced = await library(request, env, actor, path);
+    if (enhanced) return json(enhanced.body, enhanced.status);
 
     if (method === "GET" && path === "tenants") {
       requirePlatformAdmin(actor);
@@ -609,7 +616,7 @@ export async function onRequest(context) {
       await db
         .prepare(
           `DELETE FROM bookmarks
-           WHERE id = ? AND tenant_id = ?`
+           WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL`
         )
         .bind(toId(parts[1]), tenantId)
         .run();
@@ -636,6 +643,7 @@ export async function onRequest(context) {
 }
 
 export default {
+  async scheduled(event, env, ctx) { ctx.waitUntil(scheduledBackup(env)); },
   async fetch(request, env) {
     if (request.method.toUpperCase() === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders(request, env) });
