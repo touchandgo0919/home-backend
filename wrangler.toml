@@ -11,3 +11,8 @@ binding = "DB"
 database_name = "homepage"
 database_id = "7d8641d3-91a1-4b42-8564-a710f2ba274e"
 migrations_dir = "migrations"
+
+[[ratelimits]]
+name = "REGISTRATION_LIMITER"
+namespace_id = "2026100801"
+simple = { limit = 10, period = 60 }

@@ -1,3 +1,5 @@
+import { register } from "./register.js";
+
 const DEFAULT_TENANT = "zhaotao";
 const COOKIE_NAME = "nav_token";
 const AUTH_LIFETIME_YEARS = 99;
@@ -213,11 +215,6 @@ async function requireActor(request, env, db) {
     };
   }
 
-  const tenant = await getTenantBySlug(db, tenantSlug);
-  if (token === tenant.admin_token) {
-    return { role: "admin", tenant };
-  }
-
   throw Object.assign(new Error("Unauthorized"), { status: 401 });
 }
 
@@ -235,6 +232,12 @@ async function getOptionalActor(request, env, db) {
 function requireTenantAdmin(actor) {
   if (!["platform", "admin"].includes(actor.role)) {
     throw Object.assign(new Error("Tenant administrator token is required."), { status: 403 });
+  }
+}
+
+function requirePlatformAdmin(actor) {
+  if (actor.role !== "platform") {
+    throw Object.assign(new Error("Platform administrator token is required."), { status: 403 });
   }
 }
 
@@ -495,6 +498,11 @@ export async function onRequest(context) {
   try {
     const db = requireDb(env);
 
+    if (method === "POST" && path === "auth/register") {
+      const { token, tenant } = await register(request, env, db);
+      return json({ token, nav: { ...await getNavForTenant(db, tenant), role: "editor" } }, 201);
+    }
+
     if (method === "GET" && path === "nav") {
       const actor = await getOptionalActor(request, env, db);
       if (!actor) {
@@ -539,23 +547,23 @@ export async function onRequest(context) {
     const tenantId = actor.tenant.id;
 
     if (method === "GET" && path === "tenants") {
-      requireTenantAdmin(actor);
+      requirePlatformAdmin(actor);
       return json({ data: await listTenants(db) });
     }
 
     if (method === "POST" && path === "tenants") {
-      requireTenantAdmin(actor);
+      requirePlatformAdmin(actor);
       return json(await createTenant(db, await readJson(request)), 201);
     }
 
     if (method === "PUT" && parts[0] === "tenants" && parts[1]) {
-      requireTenantAdmin(actor);
+      requirePlatformAdmin(actor);
       const id = toId(parts[1]);
       return json(await updateTenant(db, id, await readJson(request)));
     }
 
     if (method === "DELETE" && parts[0] === "tenants" && parts[1]) {
-      requireTenantAdmin(actor);
+      requirePlatformAdmin(actor);
       await db.prepare("DELETE FROM tenants WHERE id = ? AND slug <> ?").bind(toId(parts[1]), DEFAULT_TENANT).run();
       return json({ ok: true });
     }
@@ -620,6 +628,9 @@ export async function onRequest(context) {
 
     return json({ error: "Not found" }, 404);
   } catch (error) {
+    if (path === "auth/register" && !error.status) {
+      return json({ error: "注册暂未完成，请稍后使用同一注册凭据重试。" }, 500);
+    }
     return json({ error: error.message || "Unexpected error" }, error.status || 500);
   }
 }
