@@ -86,3 +86,17 @@ created snapshot may need a short delay before a different location can download
 Recovery merges a selected account's bookmarks without replacing current data or credentials. For full disaster recovery,
 retrieve the private full snapshot with an authorized Cloudflare account, validate its SHA-256 against `backup_runs`, and
 restore into a separate database for review before changing production bindings. Do not overwrite a live database blindly.
+
+## Pro organizer preview
+
+Migration `0008_pro_tools.sql` adds optional per-account Pro entitlements, bookmark tags and cached link-check results. It does not change existing Tokens or current free features. Apply the migration before deploying this backend version. The platform administrator can grant or revoke test access in the site's Pro panel; there is no purchase or payment endpoint yet. Entitlements belong to tenant IDs rather than browser devices or Tokens.
+
+- `GET /api/pro/status`: current plan and feature availability.
+- `GET /api/pro/organize`: account-scoped collections, bookmarks and tags. Reading/exporting tags remains possible after Pro expires.
+- `POST /api/pro/bookmarks/move`: move up to 100 selected bookmarks to an existing collection.
+- `POST /api/pro/bookmarks/tag`: add or remove one tag on up to 100 bookmarks.
+- `PUT /api/pro/bookmarks/:id/tags`: replace one bookmark's tags.
+- `POST /api/pro/links/check`: check up to 10 saved URLs at a time. Results are cached for 24 hours, with a 100-link daily limit; only HTTP 404/410 is called missing. Links are never deleted automatically.
+- `PUT`/`DELETE /api/pro/admin/entitlements/:tenant_id`: platform-only manual preview grants, with optional expiry.
+
+Full daily backups and account JSON exports include tags. Existing free accounts retain bookmark access, import/export and recovery. Payment integration will be added only after a merchant channel is selected.

@@ -18,11 +18,13 @@ export async function readBody(request) {
 const rows = async statement => (await statement.all()).results;
 const activeCategory = async (db,tenant,id) => {const c=await db.prepare('SELECT id,name FROM categories WHERE tenant_id=? AND id=? AND deleted_at IS NULL').bind(tenant,id).first();if(!c)throw problem('Category not found.',404);return c;};
 export async function exportTenant(db,tenant) {
- const [c,b]=await db.batch([
+ const [c,b,t]=await db.batch([
   db.prepare('SELECT id,name,icon,sort_order FROM categories WHERE tenant_id=? AND deleted_at IS NULL ORDER BY sort_order,id').bind(tenant),
-  db.prepare('SELECT b.id,b.category_id,b.title,b.url,b.icon_url,b.sort_order FROM bookmarks b JOIN categories c ON c.id=b.category_id AND c.tenant_id=b.tenant_id WHERE b.tenant_id=? AND b.deleted_at IS NULL AND c.deleted_at IS NULL ORDER BY b.sort_order,b.id').bind(tenant)
+  db.prepare('SELECT b.id,b.category_id,b.title,b.url,b.icon_url,b.sort_order FROM bookmarks b JOIN categories c ON c.id=b.category_id AND c.tenant_id=b.tenant_id WHERE b.tenant_id=? AND b.deleted_at IS NULL AND c.deleted_at IS NULL ORDER BY b.sort_order,b.id').bind(tenant),
+  db.prepare('SELECT t.bookmark_id,t.tag FROM bookmark_tags t JOIN bookmarks b ON b.id=t.bookmark_id AND b.tenant_id=t.tenant_id WHERE t.tenant_id=? AND b.deleted_at IS NULL').bind(tenant)
  ]);
- return {format:'home-navigation',version:1,exported_at:new Date().toISOString(),categories:c.results.map(g=>({...g,links:b.results.filter(x=>x.category_id===g.id)}))};
+ const tags=new Map();for(const row of t.results){if(!tags.has(row.bookmark_id))tags.set(row.bookmark_id,[]);tags.get(row.bookmark_id).push(row.tag);}
+ return {format:'home-navigation',version:1,exported_at:new Date().toISOString(),categories:c.results.map(g=>({...g,links:b.results.filter(x=>x.category_id===g.id).map(x=>({...x,tags:tags.get(x.id)||[]}))}))};
 }
 async function normalizeImport(db,tenant,body) {
  const input=body.categories;
@@ -33,7 +35,13 @@ async function normalizeImport(db,tenant,body) {
   const name=textOf(group.name||group.category,100);if(!Array.isArray(group.links))throw problem('Each collection needs a links array.');
   const links=[];
   for(const item of group.links){if(++total>1000)throw problem('Import up to 1000 bookmarks at a time.');
-   try{const url=canonical(item.url),title=textOf(item.title);if(seen.has(url)){duplicates++;continue;}seen.add(url);links.push({url,title});}catch{invalid++;}
+   let tags=[];
+   if(item.tags!==undefined){
+    if(!Array.isArray(item.tags)||item.tags.length>10)throw problem('Each bookmark can have up to 10 tags.');
+    tags=item.tags.map(tag=>{const value=textOf(tag,40);if(/[\u0000-\u001f\u007f]/.test(value))throw problem('Invalid tag.');return value;});
+    if(new Set(tags.map(tag=>tag.toLocaleLowerCase())).size!==tags.length)throw problem('Duplicate tags in import.');
+   }
+   try{const url=canonical(item.url),title=textOf(item.title);if(seen.has(url)){duplicates++;continue;}seen.add(url);links.push({url,title,tags});}catch{invalid++;}
   }
   categories.push({name,icon:'book',links});
  }
@@ -124,6 +132,11 @@ export async function library(request,env,actor,path){
     JOIN categories c ON c.tenant_id=? AND c.name=json_extract(g.value,'$.name') AND c.deleted_at IS NULL
     WHERE NOT EXISTS(SELECT 1 FROM bookmarks b WHERE b.tenant_id=? AND b.url_key=json_extract(l.value,'$.url') AND b.deleted_at IS NULL)
     AND NOT EXISTS(SELECT 1 FROM write_requests WHERE tenant_id=? AND request_key=?)`).bind(tenant,Date.now(),key,payload,tenant,tenant,tenant,key));
+  statements.push(db.prepare(`INSERT INTO bookmark_tags(tenant_id,bookmark_id,tag)
+    SELECT ?,b.id,t.value FROM json_each(?) g JOIN json_each(g.value,'$.links') l JOIN json_each(l.value,'$.tags') t
+    JOIN bookmarks b ON b.tenant_id=? AND b.url_key=json_extract(l.value,'$.url') AND b.source_request=?
+    WHERE NOT EXISTS(SELECT 1 FROM write_requests WHERE tenant_id=? AND request_key=?)
+    ON CONFLICT(bookmark_id,tag) DO NOTHING`).bind(tenant,payload,tenant,key,tenant,key));
   statements.push(db.prepare('INSERT INTO write_requests(tenant_id,request_key,body_hash,created_at) VALUES(?,?,?,?) ON CONFLICT(tenant_id,request_key) DO NOTHING').bind(tenant,key,hash,Date.now()));
   await db.batch(statements);await receipt(db,tenant,key,hash);
   const n=await db.prepare('SELECT COUNT(*) AS n FROM bookmarks WHERE tenant_id=? AND source_request=?').bind(tenant,key).first();return ok({ok:true,added:n.n,duplicates:plan.total-plan.invalid-n.n,invalid:plan.invalid});

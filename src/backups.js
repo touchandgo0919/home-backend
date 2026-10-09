@@ -1,11 +1,12 @@
 import { problem, sha } from './library.js';
-const TABLES=['tenants','tenant_tokens','categories','bookmarks','write_requests'];
+const TABLES=['tenants','tenant_tokens','categories','bookmarks','write_requests','tenant_entitlements','bookmark_tags','pro_link_checks','pro_link_check_usage'];
 const RETENTION=35*86400;
 export async function createBackup(env){
  if(!env.HOME_BACKUPS)throw problem('Backup storage is not configured.',503);
  const id=crypto.randomUUID(),created=Date.now();
  try{
-  const results=await env.DB.batch(TABLES.map(t=>env.DB.prepare(`SELECT * FROM ${t} ORDER BY ${t==='write_requests'?'tenant_id,request_key':'id'}`)));
+  const order={write_requests:'tenant_id,request_key',tenant_entitlements:'tenant_id',bookmark_tags:'tenant_id,bookmark_id,tag',pro_link_checks:'tenant_id,bookmark_id',pro_link_check_usage:'tenant_id,day'};
+  const results=await env.DB.batch(TABLES.map(t=>env.DB.prepare(`SELECT * FROM ${t} ORDER BY ${order[t]||'id'}`)));
   const tables=Object.fromEntries(TABLES.map((name,i)=>[name,results[i].results]));
   const snapshot={format:'home-full-backup',version:1,created_at:created,tables};
   const body=JSON.stringify(snapshot),bytes=new TextEncoder().encode(body).length;
@@ -37,7 +38,7 @@ export async function backupRoutes(request,env,actor,path){
   if(!text)throw problem('Backup not yet available. Retry shortly.',503);
   if(await sha(text)!==meta.checksum)throw problem('Backup integrity check failed.',503);
   const snapshot=JSON.parse(text),tenant=actor.tenant.id;
-  const categories=snapshot.tables.categories.filter(g=>g.tenant_id===tenant&&!g.deleted_at).map(g=>({name:g.name,icon:g.icon,links:snapshot.tables.bookmarks.filter(b=>b.tenant_id===tenant&&b.category_id===g.id&&!b.deleted_at).map(b=>({title:b.title,url:b.url,icon_url:b.icon_url}))}));
+  const categories=snapshot.tables.categories.filter(g=>g.tenant_id===tenant&&!g.deleted_at).map(g=>({name:g.name,icon:g.icon,links:snapshot.tables.bookmarks.filter(b=>b.tenant_id===tenant&&b.category_id===g.id&&!b.deleted_at).map(b=>({title:b.title,url:b.url,icon_url:b.icon_url,tags:(snapshot.tables.bookmark_tags||[]).filter(t=>t.tenant_id===tenant&&t.bookmark_id===b.id).map(t=>t.tag)}))}));
   return {body:{format:'home-navigation',version:1,exported_at:new Date(snapshot.created_at).toISOString(),categories},status:200};
  }
  return null;
@@ -49,6 +50,7 @@ export async function scheduledBackup(env){
  await env.DB.batch([
   env.DB.prepare('DELETE FROM bookmarks WHERE deleted_at IS NOT NULL AND deleted_at<?').bind(cutoff),
   env.DB.prepare('DELETE FROM categories WHERE deleted_at IS NOT NULL AND deleted_at<?').bind(cutoff),
+  env.DB.prepare('DELETE FROM pro_link_check_usage WHERE day<?').bind(new Date(Date.now()-90*86400000).toISOString().slice(0,10)),
   env.DB.prepare('DELETE FROM backup_runs WHERE created_at<?').bind(Date.now()-RETENTION*1000)
  ]);
 }

@@ -1,5 +1,6 @@
 import { backupRoutes, scheduledBackup } from "./backups.js";
 import { library } from "./library.js";
+import { proRoutes } from "./pro.js";
 import { register } from "./register.js";
 
 const DEFAULT_TENANT = "zhaotao";
@@ -548,6 +549,8 @@ export async function onRequest(context) {
 
     const actor = await requireActor(request, env, db);
     const tenantId = actor.tenant.id;
+    const pro = await proRoutes(request, env, actor, path);
+    if (pro) return json(pro.body, pro.status);
     const backup = await backupRoutes(request, env, actor, path);
     if (backup) return json(backup.body, backup.status);
     const enhanced = await library(request, env, actor, path);

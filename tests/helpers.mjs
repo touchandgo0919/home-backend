@@ -13,6 +13,7 @@ export function setup() {
     INSERT INTO categories (id,tenant_id,name) VALUES (1,1,'Existing group');
     INSERT INTO bookmarks (tenant_id,category_id,title,url) VALUES (1,1,'Existing bookmark','https://existing.example/');`);
   sql.exec(readFileSync(new URL('../migrations/0007_library_tools.sql', import.meta.url), 'utf8'));
+  sql.exec(readFileSync(new URL('../migrations/0008_pro_tools.sql', import.meta.url), 'utf8'));
   const db = {
     prepare(query) {
       let args = [];
