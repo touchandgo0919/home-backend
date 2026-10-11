@@ -202,19 +202,27 @@ async function requireActor(request, env, db) {
     .first();
 
   if (tokenRow) {
-    if (requestedSlug && requestedSlug !== tokenRow.slug) {
+    // The original zhaotao administrator owns this installation. Only its
+    // primary admin token receives platform access; extra account tokens do not.
+    const isPrimaryPlatformAdmin = tokenRow.slug === DEFAULT_TENANT
+      && tokenRow.role === "admin"
+      && token === tokenRow.admin_token;
+    if (requestedSlug && requestedSlug !== tokenRow.slug && !isPrimaryPlatformAdmin) {
       throw Object.assign(new Error("Token does not belong to requested tenant."), { status: 403 });
     }
+    const tenant = isPrimaryPlatformAdmin && requestedSlug && requestedSlug !== tokenRow.slug
+      ? await getTenantBySlug(db, requestedSlug)
+      : {
+          id: tokenRow.id,
+          slug: tokenRow.slug,
+          name: tokenRow.name,
+          admin_token: tokenRow.admin_token,
+          sort_order: tokenRow.sort_order,
+        };
     return {
-      role: tokenRow.role,
+      role: isPrimaryPlatformAdmin ? "platform" : tokenRow.role,
       token: { id: tokenRow.token_id, name: tokenRow.token_name },
-      tenant: {
-        id: tokenRow.id,
-        slug: tokenRow.slug,
-        name: tokenRow.name,
-        admin_token: tokenRow.admin_token,
-        sort_order: tokenRow.sort_order,
-      },
+      tenant,
     };
   }
 

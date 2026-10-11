@@ -52,11 +52,18 @@ test('registration validates inputs, applies the limiter and fails closed withou
   assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM tenants').get().n,1);
 });
 
-test('tenant admins cannot enumerate all tokens or create global tenants; platform access remains', async () => {
-  const {call}=setup();
-  assert.equal((await call('tenants',null,'existing-admin')).status,403);
-  assert.equal((await call('tenants',{slug:'other',admin_token:'other-token'},'existing-admin')).status,403);
+test('only the primary zhaotao admin token receives platform access', async () => {
+  const {sql,call}=setup();
+  assert.equal((await call('auth/session',null,'existing-admin')).body.role,'platform');
+  assert.equal((await call('tenants',null,'existing-admin')).status,200);
   assert.equal((await call('tokens',null,'existing-admin')).status,200);
+  assert.equal((await call('tenants',{slug:'other',admin_token:'other-token'},'existing-admin')).status,201);
+  assert.equal((await call('nav?tenant=other',null,'existing-admin')).status,200);
+  sql.prepare("INSERT INTO tenant_tokens (tenant_id,name,token,role) VALUES (1,'Extra admin','extra-admin','admin')").run();
+  assert.equal((await call('auth/session',null,'extra-admin')).body.role,'admin');
+  assert.equal((await call('tenants',null,'extra-admin')).status,403);
+  assert.equal((await call('tenants',null,'other-token')).status,403);
+  assert.equal((await call('nav?tenant=other',null,'extra-admin')).status,403);
   assert.equal((await call('tenants',null,'platform-test-token')).status,200);
 });
 

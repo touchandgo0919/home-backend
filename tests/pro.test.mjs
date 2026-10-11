@@ -3,10 +3,16 @@ import assert from 'node:assert/strict';
 import { setup } from './helpers.mjs';
 import { createBackup } from '../src/backups.js';
 
-const admin = 'platform-test-token', user = 'existing-admin';
+const admin = 'platform-test-token', user = 'additional-admin';
+
+function setupUser() {
+  const context = setup();
+  context.sql.prepare("INSERT INTO tenant_tokens (tenant_id,name,token,role) VALUES (1,'Additional admin',?,'admin')").run(user);
+  return context;
+}
 
 test('Pro mutations require a server-side entitlement and expiry is enforced', async () => {
-  const { call, sql } = setup();
+  const { call, sql } = setupUser();
   assert.equal((await call('pro/status', null, user)).body.plan, 'free');
   assert.equal((await call('pro/bookmarks/tag', { ids: [1], tag: 'Read', action: 'add' }, user)).status, 403);
   assert.equal((await call('pro/admin/entitlements/1', { expires_at: Date.now() + 86400000 }, user, 'PUT')).status, 403);
@@ -18,7 +24,7 @@ test('Pro mutations require a server-side entitlement and expiry is enforced', a
 });
 
 test('Pro bulk organization is tenant scoped and tags survive export, import and backup', async () => {
-  const { call, env, sql } = setup();
+  const { call, env, sql } = setupUser();
   await call('pro/admin/entitlements/1', { expires_at: null }, admin, 'PUT');
   const other = (await call('auth/register', { name: 'Other', registration_key: 'e'.repeat(64) })).body.token;
   await call('pro/admin/entitlements/2', { expires_at: null }, admin, 'PUT');
@@ -44,7 +50,7 @@ test('Pro bulk organization is tenant scoped and tags survive export, import and
 });
 
 test('Pro link check distinguishes missing pages, caches results and skips local URLs', async () => {
-  const { call, env, sql } = setup();
+  const { call, env, sql } = setupUser();
   await call('pro/admin/entitlements/1', { expires_at: null }, admin, 'PUT');
   let fetches = 0;
   env.LINK_CHECK_FETCH = async () => { fetches++; return { status: 404, body: null }; };

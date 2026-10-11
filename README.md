@@ -47,8 +47,10 @@ The limit is 10 registration requests per minute per connecting IP at each Cloud
 The current reverse proxy shares its IP quota across users; this is a coarse abuse limit, not a per-person quota.
 Registration itself needs no migration. The 1.2 library features require migration 0007 below. Existing Tokens are preserved.
 
-Global tenant management requires the platform Token. Tenant admins may manage their own Tokens;
-editor accounts may edit only their own categories and bookmarks. Authentication uses `tenant_tokens`;
+Global tenant management requires the platform Token or the primary administrator Token
+of the original `zhaotao` account. Other admin Tokens, including additional Tokens of
+that account, may manage only their own account's Tokens; editor accounts may edit
+only their own categories and bookmarks. Authentication uses `tenant_tokens`;
 before upgrading an older installation, verify each active tenant credential has a corresponding row there.
 
 Run `npm test` with Node.js 22.13+ (built-in `node:sqlite`) for transaction rollback, retry, account isolation,
